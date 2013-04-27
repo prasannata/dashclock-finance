@@ -1,6 +1,8 @@
 package com.prasanna.android.dashclock.finance;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,12 +13,14 @@ import org.json.JSONObject;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
 
 public class StockTickerExtension extends DashClockExtension
 {
+    private static final String TAG = StockTickerExtension.class.getSimpleName();
     private static final String YAHOO_API_HOST = "http://query.yahooapis.com";
     private static final String YQL_PATH = "/v1/public/yql";
     private static final String YQL_FINANCE_QUOTES_HEAD = "SELECT * FROM yahoo.finance.quotes WHERE symbol=\"";
@@ -24,7 +28,7 @@ public class StockTickerExtension extends DashClockExtension
     private static final String JSON = "json";
     private static final String ENV_VAL = "store://datatables.org/alltableswithkeys";
     private static final String YAHOO_FINANCE_URL = "http://finance.yahoo.com/quotes/";
-    private static final String QUOTE_FORMAT = "%-7s%11s%8s\n";
+    private static final String QUOTE_FORMAT = "%-6s %8s (%s)\n";
 
     private static class QueryParams
     {
@@ -50,27 +54,28 @@ public class StockTickerExtension extends DashClockExtension
     @Override
     protected void onUpdateData(int reason)
     {
-        getStockQuotesAndPublishUpdate();
-    }
-
-    private void getStockQuotesAndPublishUpdate()
-    {
         try
         {
-            JSONObject jsonObject = getQuotes();
-            JSONObject query = jsonObject.getJSONObject(JsonFields.QUERY);
-            JSONObject results = query.getJSONObject(JsonFields.RESULTS);
-            JSONArray jsonArray = results.getJSONArray(JsonFields.QUOTE);
-            String symbols = getPriceDisplayForSymbol(jsonArray.getJSONObject(0));
-            symbols += getPriceDisplayForSymbol(jsonArray.getJSONObject(1));
-            symbols += getPriceDisplayForSymbol(jsonArray.getJSONObject(2));
+            JSONObject jsonObject = executeHttpRequest();
+            String symbols = "No symbols added";
 
-            publishUpdate(new ExtensionData()
-                            .visible(true)
-                            .icon(R.drawable.stocks)
-                            .status("Stock Prices")
-                            .expandedBody(symbols)
-                            .clickIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(YAHOO_FINANCE_URL + "QCOM,AAPL,TSLA"))));
+            if (jsonObject != null)
+            {
+                JSONObject query = jsonObject.getJSONObject(JsonFields.QUERY);
+                JSONObject results = query.getJSONObject(JsonFields.RESULTS);
+                JSONArray jsonArray = results.getJSONArray(JsonFields.QUOTE);
+
+                symbols = getPriceDisplayForSymbol(jsonArray.getJSONObject(0));
+                for (int i = 1; i < jsonArray.length(); i++)
+                    symbols += getPriceDisplayForSymbol(jsonArray.getJSONObject(i));
+            }
+
+            Log.d(TAG, symbols);
+            Intent clickIntent =
+                            new Intent(Intent.ACTION_VIEW, Uri.parse(YAHOO_FINANCE_URL
+                                            + AppUtil.getSavedSymbols(getApplicationContext())));
+            publishUpdate(new ExtensionData().visible(true).icon(R.drawable.stocks).status("Stock Prices")
+                            .expandedBody(symbols).clickIntent(clickIntent));
 
         }
         catch (JSONException e)
@@ -79,11 +84,16 @@ public class StockTickerExtension extends DashClockExtension
         }
     }
 
-    private JSONObject getQuotes()
+    private JSONObject executeHttpRequest()
     {
+        String yql = getYql();
+
+        if (yql == null)
+            return null;
+
         HttpHelper httpHelper = new HttpHelper();
         Map<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(QueryParams.Q, getYql());
+        queryParams.put(QueryParams.Q, yql);
         queryParams.put(QueryParams.FORMAT, JSON);
         queryParams.put(QueryParams.ENV, ENV_VAL);
         return httpHelper.executeHttpGet(YAHOO_API_HOST, YQL_PATH, queryParams);
@@ -91,20 +101,21 @@ public class StockTickerExtension extends DashClockExtension
 
     private String getYql()
     {
-        return YQL_FINANCE_QUOTES_HEAD + getDesiredSymbols() + YQL_FINANCE_QUOTES_TAIL;
-    }
-
-    private String getDesiredSymbols()
-    {
-        return "QCOM AAPL TSLA";
+        String desiredSymbols = AppUtil.getSavedSymbols(getApplicationContext());
+        if (desiredSymbols != null)
+            return YQL_FINANCE_QUOTES_HEAD + desiredSymbols.replaceAll(",", " ") + YQL_FINANCE_QUOTES_TAIL;
+        return null;
     }
 
     private String getPriceDisplayForSymbol(JSONObject symbolObj) throws JSONException
     {
-        return String.format(QUOTE_FORMAT, symbolObj.getString(JsonFields.Quote.SYMBOL),
+        return String.format(
+                        Locale.getDefault(),
+                        QUOTE_FORMAT,
+                        symbolObj.getString(JsonFields.Quote.SYMBOL).trim(),
                         splitTimeAndPriceAndGetPrice(symbolObj
-                                        .getString(JsonFields.Quote.LAST_TRADE_REAL_TIME_WITH_TIME)), symbolObj
-                                        .getString(JsonFields.Quote.CHANGE_REAL_TIME));
+                                        .getString(JsonFields.Quote.LAST_TRADE_REAL_TIME_WITH_TIME)),
+                        formatFloatValue(symbolObj.getString(JsonFields.Quote.CHANGE_REAL_TIME).trim())).toString();
     }
 
     private String splitTimeAndPriceAndGetPrice(String symbolObj) throws JSONException
@@ -115,8 +126,15 @@ public class StockTickerExtension extends DashClockExtension
             Pattern p = Pattern.compile("<b>(.*)</b>");
             Matcher m = p.matcher(timeAndPrice[1].trim());
             m.find();
-            return m.group(1).trim();
+            return String.format(Locale.getDefault(), "%5.2f", Float.parseFloat(m.group(1).trim()));
         }
         return symbolObj;
+    }
+
+    private String formatFloatValue(String value) throws JSONException
+    {
+        float floatVal = Float.parseFloat(value);
+        DecimalFormat fmt = new DecimalFormat("+#,##0.00;-#");
+        return fmt.format(floatVal);
     }
 }
