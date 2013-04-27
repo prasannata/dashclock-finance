@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dashclock Finance</string>
+    <string name="extension_description">Monitor stock quotes</string>
+    <string name="searchSymbolHint">Search company</string>
+</resources>
