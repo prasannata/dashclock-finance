@@ -54,10 +54,22 @@ public class StockTickerExtension extends DashClockExtension
     @Override
     protected void onUpdateData(int reason)
     {
+        switch (reason)
+        {
+            case UPDATE_REASON_INITIAL:
+            case UPDATE_REASON_SETTINGS_CHANGED:
+            case UPDATE_REASON_PERIODIC:
+                getQuotesAndPublishUpdate();
+                break;
+        }
+    }
+
+    private void getQuotesAndPublishUpdate()
+    {
         try
         {
             JSONObject jsonObject = executeHttpRequest();
-            String symbols = "No symbols added";
+            String symbols = "--";
 
             if (jsonObject != null)
             {
