@@ -37,7 +37,8 @@
         <activity
             android:name=".StockTickerExtensionSettingsActivity"
             android:configChanges="orientation|screenSize"
-            android:exported="true" />
+            android:exported="true"
+            android:launchMode="singleTask" />
     </application>
 
 </manifest>

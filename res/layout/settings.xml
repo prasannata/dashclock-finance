@@ -1,49 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:orientation="vertical"
-    android:padding="5dp" >
+    android:background="@android:color/darker_gray"
+    android:baselineAligned="false"
+    android:orientation="horizontal" >
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:orientation="horizontal" >
+    <fragment
+        android:id="@+id/symbol_list_fragment"
+        android:name="com.prasanna.android.dashclock.finance.SymbolListFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
 
-        <EditText
-            android:id="@+id/searchTerm"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:layout_weight="0.9"
-            android:cursorVisible="true"
-            android:hint="@string/searchSymbolHint"
-            android:inputType="text"
-            android:padding="5dp"
-            android:textColor="@android:color/black"
-            android:textCursorDrawable="@null"
-            android:textSize="20sp" />
-
-        <ImageView
-            android:id="@+id/searchAction"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="0.1"
-            android:src="@drawable/search" />
-    </LinearLayout>
-
-    <ListView
-        android:id="@+id/searchResultList"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:choiceMode="none"
-        android:clickable="true"
-        android:descendantFocusability="beforeDescendants"
-        android:divider="@android:color/transparent"
-        android:listSelector="@android:color/transparent" >
-    </ListView>
+    <fragment
+        android:id="@+id/symbol_search_fragment"
+        android:name="com.prasanna.android.dashclock.finance.SymbolSearchFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2" />
 
 </LinearLayout>

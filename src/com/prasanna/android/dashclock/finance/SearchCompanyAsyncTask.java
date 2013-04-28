@@ -13,45 +13,44 @@ import org.json.JSONObject;
 
 import android.os.AsyncTask;
 
-import com.prasanna.android.dashclock.finance.SearchCompanyAsyncTask.CompanySearchResult;
+import com.prasanna.android.dashclock.finance.SearchCompanyAsyncTask.Company;
 
-
-public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<CompanySearchResult>>
+public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<Company>>
 {
     private static final String HOST = "http://d.yimg.com/autoc.finance.yahoo.com/autoc";
     private static final String QUERY = "query";
     private static final String CALLBACK = "callback";
     private static final String CALLBACK_VAL = "YAHOO.Finance.SymbolSuggest.ssCallback";
 
-    public class CompanySearchResult
+    public class Company
     {
         public final String symbol;
         public final String name;
 
-        public CompanySearchResult(String symbol, String name)
+        public Company(String symbol, String name)
         {
             this.symbol = symbol.trim();
             this.name = name.trim();
 
         }
     }
-    
+
     public interface AsyncTaskCompletionNotifier<T>
     {
         void onAsyncTaskComplete(T result);
     }
-    
-    private AsyncTaskCompletionNotifier<List<CompanySearchResult>> asyncTaskCompletionNotifier;
 
-    public SearchCompanyAsyncTask(AsyncTaskCompletionNotifier<List<CompanySearchResult>> asyncTaskCompletionNotifier)
+    private AsyncTaskCompletionNotifier<List<Company>> asyncTaskCompletionNotifier;
+
+    public SearchCompanyAsyncTask(AsyncTaskCompletionNotifier<List<Company>> asyncTaskCompletionNotifier)
     {
         this.asyncTaskCompletionNotifier = asyncTaskCompletionNotifier;
     }
 
     @Override
-    protected List<CompanySearchResult> doInBackground(String... params)
+    protected List<Company> doInBackground(String... params)
     {
-        List<CompanySearchResult> searchResults = new ArrayList<CompanySearchResult>();
+        List<Company> searchResults = new ArrayList<Company>();
         String responseBody = executeHttpRequestAndGetResponse(params);
         if (responseBody != null)
         {
@@ -66,7 +65,7 @@ public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<Company
                     JSONObject resultItem = jsonArray.getJSONObject(i);
                     String exchange = resultItem.getString("exch");
                     if ("NMS".equalsIgnoreCase(exchange))
-                        searchResults.add(new CompanySearchResult(resultItem.getString("symbol"), resultItem
+                        searchResults.add(new Company(resultItem.getString("symbol"), resultItem
                                         .getString("name")));
                 }
 
@@ -97,7 +96,7 @@ public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<Company
     }
 
     @Override
-    protected void onPostExecute(List<CompanySearchResult> result)
+    protected void onPostExecute(List<Company> result)
     {
         asyncTaskCompletionNotifier.onAsyncTaskComplete(result);
     }

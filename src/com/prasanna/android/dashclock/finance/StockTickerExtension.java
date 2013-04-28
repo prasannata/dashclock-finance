@@ -80,7 +80,8 @@ public class StockTickerExtension extends DashClockExtension
         }
         catch (JSONException e)
         {
-            e.printStackTrace();
+            publishUpdate(new ExtensionData().visible(true).icon(R.drawable.stocks).status("Stock Prices")
+                            .expandedBody("--"));
         }
     }
 

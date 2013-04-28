@@ -16,12 +16,22 @@
         android:textIsSelectable="false"
         android:textSize="15sp" />
 
-    <ToggleButton
-        android:id="@+id/addTickerToggle"
+    <ImageView
+        android:id="@+id/addTicker"
         android:layout_width="0dp"
-        android:layout_gravity="center_vertical"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:layout_weight="0.2"
-        android:textOff="@string/add" />
+        android:src="@drawable/selector_btn_plus"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/tickerPresent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="0.2"
+        android:src="@drawable/green_tick"
+        android:visibility="gone" />
 
 </LinearLayout>

@@ -11,6 +11,7 @@
 
     <properties>
         <android.version>4.2</android.version>
+        <android.support.version>13</android.support.version>
     </properties>
 
     <dependencies>
@@ -20,12 +21,18 @@
             <version>${android.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.google.android</groupId>
+            <artifactId>android-support-v13</artifactId>
+            <version>${android.support.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.dashclock</groupId>
             <artifactId>dashclock-api</artifactId>
             <version>1.1</version>
         </dependency>
-        
+
     </dependencies>
 
     <build>
