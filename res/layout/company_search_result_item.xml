@@ -22,7 +22,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="0.2"
-        android:src="@drawable/selector_btn_plus"
+        android:background="@drawable/selector_highlight"
+        android:src="@drawable/add"
         android:visibility="gone" />
 
     <ImageView
