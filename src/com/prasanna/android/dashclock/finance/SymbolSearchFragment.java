@@ -160,9 +160,8 @@ public class SymbolSearchFragment extends ListFragment
         searchTermTv = (TextView) rootView.findViewById(R.id.searchTerm);
         searchActionIv = (ImageView) rootView.findViewById(R.id.searchAction);
         companySearchResults = new ArrayList<Company>();
-        searchResultAdapter =
-                        new SearchResultAdapter(appContext, R.layout.company_search_result_item, R.id.companyName,
-                                        companySearchResults);
+        searchResultAdapter = new SearchResultAdapter(appContext, R.layout.company_search_result_item,
+                        R.id.companyName, companySearchResults);
         progressBar = (ProgressBar) LayoutInflater.from(appContext).inflate(R.layout.progress_bar, null);
         progressBar.setVisibility(View.GONE);
 
@@ -216,7 +215,7 @@ public class SymbolSearchFragment extends ListFragment
         ((TextView) view.findViewById(R.id.companySymbol)).setText(company.symbol);
         ((TextView) view.findViewById(R.id.companyName)).setText(company.name);
 
-        new GetQuotesAsyncTask(new GetQuotesAsyncTaskCompletionNotifier()
+        new GetQuotesAsyncTask(GetQuotesAsyncTask.ACTION_GET_SYMBOL_QUOTE, new GetQuotesAsyncTaskCompletionNotifier()
         {
 
             @Override

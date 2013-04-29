@@ -1,5 +1,7 @@
 package com.prasanna.android.dashclock.finance;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,6 +13,9 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -18,17 +23,22 @@ import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 
+import com.prasanna.android.dashclock.finance.HttpHelper.ResponseParser;
 import com.prasanna.android.dashclock.finance.SearchCompanyAsyncTask.Company;
 
 public class AppUtil
 {
     private static final String YAHOO_API_HOST = "http://query.yahooapis.com";
     private static final String YQL_PATH = "/v1/public/yql";
+    private static final String GOOGLE_HOST = "http://www.google.com/ig/api";
     private static final String JSON = "json";
     private static final String ENV_VAL = "store://datatables.org/alltableswithkeys";
     private static final String YQL_FINANCE_QUOTES_HEAD = "SELECT * FROM yahoo.finance.quotes WHERE symbol=\"";
     private static final String YQL_FINANCE_QUOTES_TAIL = "\"";
+    private static final String DJI = ".DJI";
 
+    public static final String DJI_PRETTY_SYMBOL = "DJI";
+    public static final String DJI_COMPANY_NAME = "Dow Jones Industrial Average";
     public static final String PREF_TICKERS = "pref_tickers";
     public static final String PREF_NUM_TICKERS = "pref_num_tickers";
     public static final int MAX_NUM_TICKERS = 5;
@@ -38,6 +48,7 @@ public class AppUtil
         public static final String Q = "q";
         public static final String FORMAT = "format";
         public static final String ENV = "env";
+        public static final String STOCK = "stock";
     }
 
     public static class JsonFields
@@ -57,16 +68,20 @@ public class AppUtil
 
     public static class GetQuotesAsyncTask extends AsyncTask<String, Void, Map<String, Company>>
     {
+        public final static int ACTION_GET_SYMBOL_QUOTE = 0x01;
+        public final static int ACTION_GET_DJI = 0x02;
 
         private GetQuotesAsyncTaskCompletionNotifier asyncTaskCompletionNotifier;
+        private int action;
 
         public interface GetQuotesAsyncTaskCompletionNotifier
         {
             void onGetQuotes(Map<String, Company> result);
         }
 
-        public GetQuotesAsyncTask(GetQuotesAsyncTaskCompletionNotifier asyncTaskCompletionNotifier)
+        public GetQuotesAsyncTask(int action, GetQuotesAsyncTaskCompletionNotifier asyncTaskCompletionNotifier)
         {
+            this.action = action;
             this.asyncTaskCompletionNotifier = asyncTaskCompletionNotifier;
         }
 
@@ -75,11 +90,14 @@ public class AppUtil
         {
             try
             {
-                return AppUtil.getQuotes(params);
+                switch (action)
+                {
+                    case ACTION_GET_SYMBOL_QUOTE:
+                        return AppUtil.getQuotes(params);
+                }
             }
             catch (JSONException e)
             {
-                e.printStackTrace();
             }
 
             return null;
@@ -106,7 +124,7 @@ public class AppUtil
         if (symbols == null || symbols.length == 0)
             return null;
 
-        JSONObject jsonObject = executeHttpRequest(getYql(symbols));
+        JSONObject jsonObject = executeYahooHttpRequest(getYql(symbols));
 
         if (jsonObject != null)
         {
@@ -134,15 +152,66 @@ public class AppUtil
         return quotes;
     }
 
+    public static Company getDJI() throws XmlPullParserException, IOException
+    {
+        XmlPullParser xmlPullParser = executeGoogleHttpRequestForDJI();
+        return parseXmlAndGetCompany(xmlPullParser);
+    }
+
+    private static Company parseXmlAndGetCompany(XmlPullParser xmlPullParser) throws XmlPullParserException,
+                    IOException
+    {
+        final String SYMBOL = "symbol";
+        final String LAST = "last";
+        final String CHANGE = "change";
+        final String DATA = "data";
+
+        Company company = null;
+        String price = null;
+        String change = null;
+
+        if (xmlPullParser == null)
+            return null;
+
+        while (xmlPullParser.next() != XmlPullParser.END_TAG)
+        {
+            if (xmlPullParser.getEventType() != XmlPullParser.START_TAG)
+                continue;
+
+            String name = xmlPullParser.getName();
+            if (name.equals(SYMBOL))
+            {
+                String symbol = xmlPullParser.getAttributeValue(null, DATA);
+                if (symbol == null || !DJI.equals(symbol.trim()))
+                    return null;
+
+                company = new Company(DJI_PRETTY_SYMBOL, DJI_COMPANY_NAME);
+            }
+            else if (name.equals(LAST))
+                price = xmlPullParser.getAttributeValue(null, DATA);
+            else if (name.equals(CHANGE))
+                change = xmlPullParser.getAttributeValue(null, DATA);
+
+            xmlPullParser.nextTag();
+        }
+
+        if (company != null)
+        {
+            company.realTimePrice = price;
+            company.realTimeChange = change;
+        }
+
+        return company;
+    }
+
     private static Company getCompany(JSONObject symbolObj) throws JSONException
     {
         String symbol = symbolObj.getString(JsonFields.Quote.SYMBOL).trim();
         String name = symbolObj.getString(JsonFields.Quote.NAME).trim();
 
         Company company = new Company(symbol, name);
-        company.realTimePrice =
-                        splitTimeAndPriceAndGetPrice(symbolObj
-                                        .getString(JsonFields.Quote.LAST_TRADE_REAL_TIME_WITH_TIME));
+        company.realTimePrice = splitTimeAndPriceAndGetPrice(symbolObj
+                        .getString(JsonFields.Quote.LAST_TRADE_REAL_TIME_WITH_TIME));
         company.realTimeChange = formatFloatValue(symbolObj.getString(JsonFields.Quote.CHANGE_REAL_TIME));
         return company;
     }
@@ -171,14 +240,56 @@ public class AppUtil
         return YQL_FINANCE_QUOTES_HEAD + symbolBuilder.toString() + YQL_FINANCE_QUOTES_TAIL;
     }
 
-    private static JSONObject executeHttpRequest(String yql)
+    private static XmlPullParser executeGoogleHttpRequestForDJI()
+    {
+        HttpHelper httpHelper = new HttpHelper();
+        Map<String, String> queryParams = new HashMap<String, String>();
+        queryParams.put(QueryParams.STOCK, DJI);
+        return httpHelper.executeHttpGet(GOOGLE_HOST, null, queryParams, new ResponseParser<XmlPullParser>()
+        {
+            @Override
+            public XmlPullParser parse(String responseBody)
+            {
+                try
+                {
+                    XmlPullParserFactory xmlPullParserFactory = XmlPullParserFactory.newInstance();
+                    XmlPullParser xmlPullParser = xmlPullParserFactory.newPullParser();
+                    xmlPullParser.setInput(new StringReader(responseBody));
+                    return xmlPullParser;
+                }
+                catch (XmlPullParserException e)
+                {
+                }
+
+                return null;
+            }
+        });
+    }
+
+    private static JSONObject executeYahooHttpRequest(String yql)
     {
         HttpHelper httpHelper = new HttpHelper();
         Map<String, String> queryParams = new HashMap<String, String>();
         queryParams.put(QueryParams.Q, yql);
         queryParams.put(QueryParams.FORMAT, JSON);
         queryParams.put(QueryParams.ENV, ENV_VAL);
-        return httpHelper.executeHttpGet(YAHOO_API_HOST, YQL_PATH, queryParams);
+        return httpHelper.executeHttpGet(YAHOO_API_HOST, YQL_PATH, queryParams, new ResponseParser<JSONObject>()
+        {
+
+            @Override
+            public JSONObject parse(String responseBody)
+            {
+                try
+                {
+                    return new JSONObject(responseBody);
+                }
+                catch (JSONException e)
+                {
+                }
+
+                return null;
+            }
+        });
     }
 
     public static String formatFloatValue(String value)

@@ -14,8 +14,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.net.Uri;
 import android.net.Uri.Builder;
@@ -25,7 +23,13 @@ public class HttpHelper
 {
     private static final String TAG = HttpHelper.class.getSimpleName();
 
-    public JSONObject executeHttpGet(String host, String path, Map<String, String> queryParams)
+    public interface ResponseParser<T>
+    {
+        T parse(String responseBody);
+    }
+
+    public <T> T executeHttpGet(String host, String path, Map<String, String> queryParams,
+                    ResponseParser<T> responseParser)
     {
         HttpResponse httpResponse = executeRequest(getHttpGetObject(buildUri(host, path, queryParams)));
 
@@ -35,15 +39,12 @@ public class HttpHelper
             {
                 HttpEntity entity = httpResponse.getEntity();
                 String jsonText = EntityUtils.toString(entity, HTTP.UTF_8);
-                return new JSONObject(jsonText);
+                return responseParser.parse(jsonText);
             }
             catch (ParseException e)
             {
             }
             catch (IOException e)
-            {
-            }
-            catch (JSONException e)
             {
             }
         }
