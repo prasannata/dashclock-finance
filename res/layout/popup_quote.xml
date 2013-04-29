@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_white_border_holo_blue"
+    android:padding="2dp" >
+
+    <RelativeLayout
+        android:id="@+id/companyNameAndSymbol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingRight="5dp" >
+
+        <TextView
+            android:id="@+id/companySymbol"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@android:color/white"
+            android:gravity="left|center"
+            android:textColor="@android:color/black"
+            android:textIsSelectable="false"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/companyName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/companySymbol"
+            android:background="@android:color/white"
+            android:gravity="left|center"
+            android:textColor="@android:color/black"
+            android:textIsSelectable="false"
+            android:textSize="12sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/companyPriceAndChange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@id/companyNameAndSymbol"
+        android:padding="2dp" >
+
+        <TextView
+            android:id="@+id/stockPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:gravity="center|right"
+            android:textColor="@android:color/black"
+            android:textIsSelectable="false"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/stockPriceChange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/stockPrice"
+            android:layout_below="@id/stockPrice"
+            android:gravity="center|right"
+            android:textIsSelectable="false"
+            android:textSize="12sp" />
+    </RelativeLayout>
+
+</RelativeLayout>

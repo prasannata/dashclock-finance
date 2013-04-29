@@ -22,16 +22,24 @@ public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<Company
     private static final String CALLBACK = "callback";
     private static final String CALLBACK_VAL = "YAHOO.Finance.SymbolSuggest.ssCallback";
 
-    public class Company
+    public static class Company
     {
         public final String symbol;
         public final String name;
+        public String realTimePrice;
+        public String realTimeChange;
 
         public Company(String symbol, String name)
         {
             this.symbol = symbol.trim();
             this.name = name.trim();
+        }
 
+        @Override
+        public String toString()
+        {
+            return "Company [symbol=" + symbol + ", name=" + name + ", realTimePrice=" + realTimePrice
+                            + ", realTimeChange=" + realTimeChange + "]";
         }
     }
 
@@ -65,8 +73,7 @@ public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<Company
                     JSONObject resultItem = jsonArray.getJSONObject(i);
                     String exchange = resultItem.getString("exch");
                     if ("NMS".equalsIgnoreCase(exchange))
-                        searchResults.add(new Company(resultItem.getString("symbol"), resultItem
-                                        .getString("name")));
+                        searchResults.add(new Company(resultItem.getString("symbol"), resultItem.getString("name")));
                 }
 
             }
