@@ -5,6 +5,7 @@ import java.io.StringReader;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -117,9 +118,9 @@ public class AppUtil
     {
     }
 
-    public static Map<String, Company> getQuotes(String... symbols) throws JSONException
+    public static LinkedHashMap<String, Company> getQuotes(String... symbols) throws JSONException
     {
-        Map<String, Company> quotes = new HashMap<String, SearchCompanyAsyncTask.Company>();
+        LinkedHashMap<String, Company> quotes = new LinkedHashMap<String, SearchCompanyAsyncTask.Company>();
 
         if (symbols == null || symbols.length == 0)
             return null;

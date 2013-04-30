@@ -71,9 +71,7 @@ public class SearchCompanyAsyncTask extends AsyncTask<String, Void, List<Company
                 for (int i = 0; i < jsonArray.length(); i++)
                 {
                     JSONObject resultItem = jsonArray.getJSONObject(i);
-                    String exchange = resultItem.getString("exch");
-                    if ("NMS".equalsIgnoreCase(exchange))
-                        searchResults.add(new Company(resultItem.getString("symbol"), resultItem.getString("name")));
+                    searchResults.add(new Company(resultItem.getString("symbol"), resultItem.getString("name")));
                 }
 
             }

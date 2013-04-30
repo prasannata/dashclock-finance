@@ -20,7 +20,7 @@ public class StockTickerExtension extends DashClockExtension
     private static final String TAG = StockTickerExtension.class.getSimpleName();
     private static final String YAHOO_FINANCE_URL = "http://finance.yahoo.com/quotes/";
     private static final String DJI_TICKER_SYMBOL = "%5EDJI";
-    private static final String QUOTE_FORMAT = "%-6s %8s (%s)\n";
+    private static final String QUOTE_FORMAT = "%-6s %10s %10s\n";
 
     @Override
     protected void onUpdateData(int reason)
@@ -82,7 +82,7 @@ public class StockTickerExtension extends DashClockExtension
         {
             Company company = AppUtil.getDJI();
             if (company != null)
-                return AppUtil.DJI_PRETTY_SYMBOL + " " + company.realTimePrice + " (" + company.realTimeChange + ")";
+                return AppUtil.DJI_PRETTY_SYMBOL + " " + company.realTimePrice + " " + company.realTimeChange;
         }
         catch (XmlPullParserException e)
         {
