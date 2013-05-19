@@ -118,6 +118,33 @@ public class AppUtil
     {
     }
 
+    public static String padRight(String string, int maxLen)
+    {
+        if (string != null && string.length() < maxLen)
+        {
+            int padLen = maxLen - string.length();
+            for (int i = 0; i < padLen; i++)
+                string += ".";
+        }
+
+        return string;
+    }
+
+    public static String padLeft(String string, int maxLen)
+    {
+        String paddedString = "";
+
+        if (string != null && string.length() < maxLen)
+        {
+            for (int i = 0; i < (maxLen - string.length()); i++)
+                paddedString += ".";
+
+            return (paddedString += string);
+        }
+        else
+            return string;
+    }
+
     public static LinkedHashMap<String, Company> getQuotes(String... symbols) throws JSONException
     {
         LinkedHashMap<String, Company> quotes = new LinkedHashMap<String, SearchCompanyAsyncTask.Company>();
@@ -211,8 +238,9 @@ public class AppUtil
         String name = symbolObj.getString(JsonFields.Quote.NAME).trim();
 
         Company company = new Company(symbol, name);
-        company.realTimePrice = splitTimeAndPriceAndGetPrice(symbolObj
-                        .getString(JsonFields.Quote.LAST_TRADE_REAL_TIME_WITH_TIME));
+        company.realTimePrice =
+                        splitTimeAndPriceAndGetPrice(symbolObj
+                                        .getString(JsonFields.Quote.LAST_TRADE_REAL_TIME_WITH_TIME));
         company.realTimeChange = formatFloatValue(symbolObj.getString(JsonFields.Quote.CHANGE_REAL_TIME));
         return company;
     }
@@ -304,6 +332,15 @@ public class AppUtil
     {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getString(PREF_TICKERS, null);
+    }
+
+    public static String[] getSavedSymbolsArray(Context context)
+    {
+        String desiredSymbols = getSavedSymbols(context);
+        if (desiredSymbols != null)
+            return desiredSymbols.split(",");
+
+        return null;
     }
 
     public static boolean canAddTicker(Context context)
