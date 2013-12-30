@@ -15,98 +15,85 @@ import android.widget.ListView;
 
 import com.prasanna.android.dashclock.finance.SwipeDismissListViewTouchListener.DismissCallbacks;
 
-public class SymbolListFragment extends ListFragment
-{
-    private Context appContext;
-    private ArrayList<String> savedSymbolList = new ArrayList<String>();
-    private ArrayAdapter<String> symbolArrayAdapter;
-    private View emptySymbolsView;
-    private OnTickerRemoveListener onTickerRemoveListener;
+public class SymbolListFragment extends ListFragment {
+  private Context appContext;
+  private ArrayList<String> savedSymbolList = new ArrayList<String>();
+  private ArrayAdapter<String> symbolArrayAdapter;
+  private View emptySymbolsView;
+  private OnTickerRemoveListener onTickerRemoveListener;
 
-    public interface OnTickerRemoveListener
-    {
-        void onTickerRemove(String symbol);
-    }
+  public interface OnTickerRemoveListener {
+    void onTickerRemove(String symbol);
+  }
 
-    @Override
-    public void onAttach(Activity activity)
-    {
-        super.onAttach(activity);
+  @Override
+  public void onAttach(Activity activity) {
+    super.onAttach(activity);
 
-        if (!(activity instanceof OnTickerRemoveListener))
-            throw new IllegalArgumentException("Activity must implement OnTickerRemoveListener");
-        
-        appContext = activity.getApplicationContext();
-    }
+    if (!(activity instanceof OnTickerRemoveListener))
+      throw new IllegalArgumentException("Activity must implement OnTickerRemoveListener");
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
-        emptySymbolsView = LayoutInflater.from(appContext).inflate(R.layout.empty_symbols, null);
-        emptySymbolsView.setVisibility(View.GONE);
-        symbolArrayAdapter = new ArrayAdapter<String>(appContext, R.layout.symbol, R.id.symbol, savedSymbolList);
-        return inflater.inflate(R.layout.symbol_list, null);
-    }
+    appContext = activity.getApplicationContext();
+  }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
-        super.onActivityCreated(savedInstanceState);
+  @Override
+  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    emptySymbolsView = LayoutInflater.from(appContext).inflate(R.layout.empty_symbols, null);
+    emptySymbolsView.setVisibility(View.GONE);
+    symbolArrayAdapter = new ArrayAdapter<String>(appContext, R.layout.symbol, R.id.symbol, savedSymbolList);
+    return inflater.inflate(R.layout.symbol_list, null);
+  }
 
-        getListView().addFooterView(emptySymbolsView);
+  @Override
+  public void onActivityCreated(Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
 
-        SwipeDismissListViewTouchListener touchListener =
-                        new SwipeDismissListViewTouchListener(getListView(), new DismissCallbacks()
-                        {
-                            @Override
-                            public void onDismiss(ListView listView, int[] reverseSortedPositions)
-                            {
-                                for (int position : reverseSortedPositions)
-                                {
-                                    String symbol = symbolArrayAdapter.getItem(position);
-                                    savedSymbolList.remove(symbol);
-                                    onTickerRemoveListener.onTickerRemove(symbol);
-                                }
+    getListView().addFooterView(emptySymbolsView);
 
-                                AppUtil.saveTickers(appContext, savedSymbolList);
-                                symbolArrayAdapter.notifyDataSetChanged();
-                            }
+    SwipeDismissListViewTouchListener touchListener =
+        new SwipeDismissListViewTouchListener(getListView(), new DismissCallbacks() {
+          @Override
+          public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+            for (int position : reverseSortedPositions) {
+              String symbol = symbolArrayAdapter.getItem(position);
+              savedSymbolList.remove(symbol);
+              onTickerRemoveListener.onTickerRemove(symbol);
+            }
 
-                            @Override
-                            public boolean canDismiss(int position)
-                            {
-                                return true;
-                            }
-                        });
-
-        getListView().setOnTouchListener(touchListener);
-        getListView().setOnScrollListener(touchListener.makeScrollListener());
-        setListAdapter(symbolArrayAdapter);
-
-        showSavedSymbols();
-    }
-
-    private void showSavedSymbols()
-    {
-        String savedSymbols = AppUtil.getSavedSymbols(appContext);
-
-        if (savedSymbols != null)
-        {
-            savedSymbolList.addAll(Arrays.asList(savedSymbols.split(",")));
+            AppUtil.saveTickers(appContext, savedSymbolList);
             symbolArrayAdapter.notifyDataSetChanged();
-        }
-    }
+          }
 
-    public void refresh()
-    {
-        savedSymbolList.clear();
-        symbolArrayAdapter.notifyDataSetChanged();
+          @Override
+          public boolean canDismiss(int position) {
+            return true;
+          }
+        });
 
-        showSavedSymbols();
-    }
+    getListView().setOnTouchListener(touchListener);
+    getListView().setOnScrollListener(touchListener.makeScrollListener());
+    setListAdapter(symbolArrayAdapter);
 
-    public void setOnTickerRemoveListener(OnTickerRemoveListener onTickerRemoveListener)
-    {
-        this.onTickerRemoveListener = onTickerRemoveListener;
+    showSavedSymbols();
+  }
+
+  private void showSavedSymbols() {
+    String savedSymbols = AppUtil.getSavedSymbols(appContext);
+
+    if (savedSymbols != null) {
+      savedSymbolList.addAll(Arrays.asList(savedSymbols.split(",")));
+      symbolArrayAdapter.notifyDataSetChanged();
     }
+  }
+
+  public void refresh() {
+    savedSymbolList.clear();
+    symbolArrayAdapter.notifyDataSetChanged();
+
+    showSavedSymbols();
+  }
+
+  public void setOnTickerRemoveListener(OnTickerRemoveListener onTickerRemoveListener) {
+    this.onTickerRemoveListener = onTickerRemoveListener;
+  }
 }
